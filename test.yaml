@@ -43,8 +43,8 @@ stages:
             inputs:
               contents: |
                 *.sln
-                netcore-unit-testing/web-api-tests/*
-                netcore-unit-testing/web-api/*
+                web-api-tests/*
+                web-api/*
               targetFolder: $(publishedFilesArtifactName)
               cleanTargetFolder: true
 
