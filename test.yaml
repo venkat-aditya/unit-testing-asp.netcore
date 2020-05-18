@@ -25,7 +25,7 @@ stages:
             displayName: Checkout repository
 
           - script: |-
-              dotnet restore --force --no-cache --no-dependencies --packages .nuget --runtime $(dotnetProductionRuntimeId) /p:TargetLatestRuntimePatch=true
+              dotnet restore --force --no-cache --no-dependencies --packages .nuget --runtime $(dotnetProductionRuntimeId)
             displayName: Restore dependencies
 
           - script: >-
