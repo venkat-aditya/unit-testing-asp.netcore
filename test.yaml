@@ -57,6 +57,29 @@ stages:
             artifact: $(publishedFilesArtifactName)
             displayName: Publish file artifacts
 
+          - task: DotNetCoreCLI@2
+            displayName: Run unit tests
+            inputs:
+              command: test
+              workingDirectory: $(publishedFilesArtifactName)
+              arguments: >-
+                --no-build
+                --configuration $(dotnetBuildConfiguration)
+                --runtime $(dotnetProductionRuntimeId)
+                --logger trx
+                /p:CollectCoverage=true
+                /p:CoverletOutputFormat=cobertura
+          - script: |-
+              dotnet tool install --tool-path ./reportgenerator-tool dotnet-reportgenerator-globaltool
+              ./reportgenerator-tool/reportgenerator -reports:*/coverage.cobertura.xml -targetdir:. -reporttypes:"Cobertura"
+            displayName: Generate coverage report
+
+          - task: PublishCodeCoverageResults@1
+            displayName: Publish test coverage
+            inputs:
+              codeCoverageTool: Cobertura
+              summaryFileLocation: Cobertura.xml
+
   - stage: unitTest
     displayName: Unit test
     dependsOn:
