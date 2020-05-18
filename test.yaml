@@ -1,0 +1,92 @@
+trigger: none
+pool:
+  vmImage: ubuntu-latest
+resources:
+  repositories:
+    - repository: aadiwebdev
+      name: aadiwebdev/unit-testing-aspnetcore-webapi
+      type: github
+      ref: master
+stages:
+  - stage: build
+    displayName: Build
+    dependsOn: []
+    jobs:
+      - job: preBuild
+        displayName: Pre-build
+        steps:
+          - checkout: none
+
+      - job: build
+        displayName: Build
+        steps:
+          - checkout: self
+            displayName: Checkout repository
+
+          - script: |-
+              dotnet restore --force --no-cache --no-dependencies --packages .nuget --runtime $(dotnetProductionRuntimeId) /p:TargetLatestRuntimePatch=true
+            displayName: Restore dependencies
+
+          - script: >-
+              dotnet publish
+              --self-contained false
+              --no-restore
+              --no-dependencies
+              --configuration $(dotnetBuildConfiguration)
+              --runtime $(dotnetProductionRuntimeId)
+              /p:TargetLatestRuntimePatch=true
+            displayName: Build assemblies
+
+          - task: CopyFiles@2
+            displayName: Prepare file artifacts
+            inputs:
+              contents: |
+                *.sln
+                netcore-unit-testing/web-api-tests/*
+                netcore-unit-testing/web-api/*
+              targetFolder: $(publishedFilesArtifactName)
+              cleanTargetFolder: true
+
+          - publish: $(publishedFilesArtifactName)
+            artifact: $(publishedFilesArtifactName)
+            displayName: Publish file artifacts
+
+  - stage: unitTest
+    displayName: Unit test
+    dependsOn:
+      - build
+    jobs:
+      - job: unitTest
+        displayName: Unit test
+        steps:
+          - checkout: none
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download artifacts
+            inputs:
+              source: current
+              artifact: $(publishedFilesArtifactName)
+              path: $(Build.SourcesDirectory)
+
+          - task: DotNetCoreCLI@2
+            displayName: Run unit tests
+            inputs:
+              command: test
+              workingDirectory: $(Build.SourcesDirectory)
+              arguments: >-
+                --no-build
+                --configuration $(dotnetBuildConfiguration)
+                --runtime $(dotnetProductionRuntimeId)
+                --logger trx
+                /p:CollectCoverage=true
+                /p:CoverletOutputFormat=cobertura
+          - script: |-
+              dotnet tool install --tool-path ./reportgenerator-tool dotnet-reportgenerator-globaltool
+              ./reportgenerator-tool/reportgenerator -reports:**/coverage.cobertura.xml -targetdir:. -reporttypes:"Cobertura"
+            displayName: Generate coverage report
+
+          - task: PublishCodeCoverageResults@1
+            displayName: Publish test coverage
+            inputs:
+              codeCoverageTool: Cobertura
+              summaryFileLocation: Cobertura.xml
