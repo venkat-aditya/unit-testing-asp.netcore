@@ -48,8 +48,8 @@ stages:
             inputs:
               contents: |
                 *.sln
-                web-api-tests/*
-                web-api/*
+                web-api-tests/**/*
+                web-api/**/*
               targetFolder: $(publishedFilesArtifactName)
               cleanTargetFolder: true
 
