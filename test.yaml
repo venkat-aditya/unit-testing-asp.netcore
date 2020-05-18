@@ -88,7 +88,7 @@ stages:
                 /p:CoverletOutputFormat=cobertura
           - script: |-
               dotnet tool install --tool-path ./reportgenerator-tool dotnet-reportgenerator-globaltool
-              ./reportgenerator-tool/reportgenerator -reports:**/coverage.cobertura.xml -targetdir:. -reporttypes:"Cobertura"
+              ./reportgenerator-tool/reportgenerator -reports:*/coverage.cobertura.xml -targetdir:. -reporttypes:"Cobertura"
             displayName: Generate coverage report
 
           - task: PublishCodeCoverageResults@1
