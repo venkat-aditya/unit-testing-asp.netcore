@@ -6,6 +6,7 @@ resources:
     - repository: aadiwebdev
       name: aadiwebdev/unit-testing-aspnetcore-webapi
       type: github
+      endpoint: aadiwebdev
       ref: master
 stages:
   - stage: build
